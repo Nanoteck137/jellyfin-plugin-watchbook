@@ -1,10 +1,9 @@
 using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 
-namespace Watchbook.Providers;
+namespace Watchbook.Providers.TV;
 
 public class WatchbookSeasonExternalId : IExternalId
 {

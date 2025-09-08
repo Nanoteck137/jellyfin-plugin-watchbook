@@ -1,17 +1,10 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Net.Http;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
-using System.Globalization;
 using MediaBrowser.Model.Entities;
-using Jellyfin.Data.Entities;
-using Watchbook.Api;
 
-namespace Watchbook.Providers;
+namespace Watchbook.Providers.TV;
 
 public class WatchbookSeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
 {

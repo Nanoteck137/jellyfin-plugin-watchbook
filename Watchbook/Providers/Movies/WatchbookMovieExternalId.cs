@@ -4,7 +4,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 
-namespace Watchbook.Providers;
+namespace Watchbook.Providers.Movies;
 
 public class WatchbookMovieExternalId : IExternalId
 {

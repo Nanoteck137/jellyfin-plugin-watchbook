@@ -1,13 +1,11 @@
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
-using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Model.Entities;
 using System.Globalization;
-using Watchbook.Api;
-using ICU4N.Util;
+using MediaBrowser.Controller.Entities.Movies;
 
-namespace Watchbook.Providers;
+namespace Watchbook.Providers.Movies;
 
 public class WatchbookMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrder
 {

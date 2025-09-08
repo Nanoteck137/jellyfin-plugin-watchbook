@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using System.Globalization;
 using Watchbook.Utils;
 
-namespace Watchbook.Providers;
+namespace Watchbook.Providers.TV;
 
 public class WatchbookSeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasOrder
 {

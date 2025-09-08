@@ -7,15 +7,15 @@ using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Watchbook.Api;
 
-namespace Watchbook.Providers;
+namespace Watchbook.Providers.Movies;
 
-public class WatchbookImageProvider : IRemoteImageProvider, IHasOrder
+public class WatchbookMovieImageProvider : IRemoteImageProvider, IHasOrder
 {
-    private readonly ILogger<WatchbookImageProvider> _log;
+    private readonly ILogger<WatchbookMovieImageProvider> _log;
     public int Order => -2;
     public string Name => "Watchbook";
 
-    public WatchbookImageProvider(ILogger<WatchbookImageProvider> logger)
+    public WatchbookMovieImageProvider(ILogger<WatchbookMovieImageProvider> logger)
     {
         _log = logger;
     }

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using System.Globalization;
 using MediaBrowser.Model.Entities;
 using Jellyfin.Data.Entities;
+using Watchbook.Api;
 
 namespace Watchbook.Providers;
 
@@ -27,11 +28,12 @@ public class WatchbookSeriesProvider : IRemoteMetadataProvider<Series, SeriesInf
     {
         Plugin.PrettyPrint("Series GetMetadata", info);
 
+        var apiClient = Plugin.Instance.GetApiClient();
+
         var id = info.GetProviderId(ProviderNames.Watchbook);
         if (id != null)
         {
-            var client = new ApiClient("https://watchbook.nanoteck137.net");
-            var res = await client.GetCollectionById(id, CancellationToken.None).ConfigureAwait(false);
+            var res = await apiClient.GetCollectionById(id, CancellationToken.None).ConfigureAwait(false);
             Plugin.PrettyPrint("GetMetadata: GetCollectionById API Call", res);
 
             if (!res.Success)
@@ -56,8 +58,7 @@ public class WatchbookSeriesProvider : IRemoteMetadataProvider<Series, SeriesInf
         }
         else
         {
-            var client = new ApiClient("https://watchbook.nanoteck137.net");
-            var res = await client.GetCollections(string.Format("name % \"%{0}%\"", info.Name), CancellationToken.None).ConfigureAwait(false);
+            var res = await apiClient.GetCollections(string.Format("name % \"%{0}%\"", info.Name), CancellationToken.None).ConfigureAwait(false);
             Plugin.PrettyPrint("Initial API Call", res);
 
             var result = new MetadataResult<Series>();
@@ -82,14 +83,13 @@ public class WatchbookSeriesProvider : IRemoteMetadataProvider<Series, SeriesInf
 
     public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
     {
+        var apiClient = Plugin.Instance.GetApiClient();
+
         // searchInfo.ProviderIds
-        searchInfo.ProviderIds.TryGetValue(ProviderNames.Watchbook, out var id);
+        // searchInfo.ProviderIds.TryGetValue(ProviderNames.Watchbook, out var id);
 
-        _log.LogInformation("GetSearchResults: Id: {id}", id);
-
-        var client = new ApiClient("https://watchbook.nanoteck137.net");
-        var res = await client.GetCollections(string.Format("name % \"%{0}%\"", searchInfo.Name), CancellationToken.None).ConfigureAwait(false);
-        Plugin.PrettyPrint("GetSearchResults: GetCollections API Call", res);
+        var res = await apiClient.GetCollections(string.Format("name % \"%{0}%\"", searchInfo.Name), CancellationToken.None).ConfigureAwait(false);
+        // TODO(patrik): Check res
 
         var results = new List<RemoteSearchResult>();
 

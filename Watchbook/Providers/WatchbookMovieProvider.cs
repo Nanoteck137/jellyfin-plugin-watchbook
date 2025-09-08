@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Model.Entities;
 using System.Globalization;
+using Watchbook.Api;
+using ICU4N.Util;
 
 namespace Watchbook.Providers;
 
@@ -20,15 +22,14 @@ public class WatchbookMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>,
 
     public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken)
     {
-        Plugin.PrettyPrint("Movie GetMetadata", info);
+        var apiClient = Plugin.Instance.GetApiClient();
+
+        var result = new MetadataResult<Movie>();
 
         var id = info.GetProviderId(ProviderNames.Watchbook);
         if (id != null)
         {
-            var client = new ApiClient("https://watchbook.nanoteck137.net");
-            var res = await client.GetMediaById(id, CancellationToken.None).ConfigureAwait(false);
-            Plugin.PrettyPrint("Initial API Call", res);
-
+            var res = await apiClient.GetMediaById(id, CancellationToken.None).ConfigureAwait(false);
             if (!res.Success)
             {
                 _log.LogError("API Error: Code: {code} Type: {type} Message: {message}", res.Error?.Code, res.Error?.Type, res.Error?.Message);
@@ -47,31 +48,24 @@ public class WatchbookMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>,
                 }
             }
 
-            var result = new MetadataResult<Movie>
+            result.HasMetadata = true;
+            result.Item = new Movie
             {
-                HasMetadata = true,
-                Item = new Movie
-                {
-                    Name = media.Title,
-                    Overview = media.Description,
-                    ProductionYear = startDate?.Year,
-                    PremiereDate = startDate,
-                    CriticRating = media.Score,
-                    Studios = [.. media.Creators],
-                    Tags = [.. media.Tags],
-                    ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, media.Id } },
-                }
+                Name = media.Title,
+                Overview = media.Description,
+                ProductionYear = startDate?.Year,
+                PremiereDate = startDate,
+                CriticRating = media.Score,
+                Studios = [.. media.Creators],
+                Tags = [.. media.Tags],
+                ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, media.Id } },
             };
 
-            return result;
         }
         else
         {
-            var client = new ApiClient("https://watchbook.nanoteck137.net");
-            var res = await client.GetMedia(string.Format("title % \"%{0}%\"", info.Name), CancellationToken.None).ConfigureAwait(false);
-            Plugin.PrettyPrint("Initial API Call", res);
+            var res = await apiClient.GetMedia(string.Format("title % \"%{0}%\"", info.Name), CancellationToken.None).ConfigureAwait(false);
 
-            var result = new MetadataResult<Movie>();
             if (res.Success && res.Data?.Media.Count > 0)
             {
                 var media = res.Data.Media[0];
@@ -86,45 +80,37 @@ public class WatchbookMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>,
                     }
                 }
 
-                result = new MetadataResult<Movie>
+                result.HasMetadata = true;
+                result.Item = new Movie
                 {
-                    HasMetadata = true,
-                    Item = new Movie
-                    {
-                        Name = media.Title,
-                        Overview = media.Description,
-                        ProductionYear = startDate?.Year,
-                        PremiereDate = startDate,
-                        CriticRating = media.Score,
-                        Studios = [.. media.Creators],
-                        Tags = [.. media.Tags],
-                        ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, media.Id } },
-                    }
+                    Name = media.Title,
+                    Overview = media.Description,
+                    ProductionYear = startDate?.Year,
+                    PremiereDate = startDate,
+                    CriticRating = media.Score,
+                    Studios = [.. media.Creators],
+                    Tags = [.. media.Tags],
+                    ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, media.Id } },
                 };
             }
-
-            return result;
         }
+
+        return result;
     }
 
     public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo searchInfo, CancellationToken cancellationToken)
     {
-        Plugin.PrettyPrint("Movie GetSearchResults", searchInfo);
+        var apiClient = Plugin.Instance.GetApiClient();
 
         // searchInfo.ProviderIds
-        searchInfo.ProviderIds.TryGetValue(ProviderNames.Watchbook, out var id);
+        // searchInfo.ProviderIds.TryGetValue(ProviderNames.Watchbook, out var id);
 
-        _log.LogInformation("GetSearchResults: Id: {id}", id);
-
-        var client = new ApiClient("https://watchbook.nanoteck137.net");
-        var res = await client.GetMedia(string.Format("title % \"%{0}%\"", searchInfo.Name), CancellationToken.None).ConfigureAwait(false);
-        Plugin.PrettyPrint("Initial API Call", res);
+        var res = await apiClient.GetMedia(string.Format("title % \"%{0}%\"", searchInfo.Name), CancellationToken.None).ConfigureAwait(false);
 
         var results = new List<RemoteSearchResult>();
 
         foreach (var media in res.Data?.Media ?? [])
         {
-            Plugin.PrettyPrint("Media Item", media);
             results.Add(
                 new()
                 {
@@ -142,10 +128,7 @@ public class WatchbookMovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>,
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
     {
-        _log.LogError("GetImageResponse: URL: {url}", url);
-
         var httpClient = Plugin.Instance.GetHttpClient();
-
         return await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
     }
 }

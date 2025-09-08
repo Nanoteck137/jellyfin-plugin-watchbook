@@ -7,6 +7,7 @@ using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
+using Watchbook.Api;
 using Watchbook.Configuration;
 
 namespace Watchbook;
@@ -30,6 +31,10 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         return httpClient;
     }
 
+    public ApiClient GetApiClient()
+    {
+        return new ApiClient(Configuration.ApiBaseUrl);
+    }
 
     static readonly JsonSerializerOptions _opts = new() { WriteIndented = true };
 

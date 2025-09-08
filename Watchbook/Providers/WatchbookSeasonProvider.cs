@@ -1,19 +1,11 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Net.Http;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
-using MediaBrowser.Model.Entities;
-using Jellyfin.Data.Entities;
 using Watchbook.Utils;
-using ICU4N.Util;
 
 namespace Watchbook.Providers;
-
 
 public class WatchbookSeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasOrder
 {
@@ -28,23 +20,19 @@ public class WatchbookSeasonProvider : IRemoteMetadataProvider<Season, SeasonInf
 
     public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
     {
-        Plugin.PrettyPrint("Season GetMetadata: SeasonInfo", info);
-
-        var dirName = Path.GetFileName(info.Path);
+        var apiClient = Plugin.Instance.GetApiClient();
 
         var result = new MetadataResult<Season>();
 
-        info.SeriesProviderIds.TryGetValue(ProviderNames.Watchbook, out string? seriesId);
+        var dirName = Path.GetFileName(info.Path);
 
+        info.SeriesProviderIds.TryGetValue(ProviderNames.Watchbook, out string? seriesId);
         if (string.IsNullOrWhiteSpace(seriesId))
         {
             return result;
         }
 
-        var client = new ApiClient("https://watchbook.nanoteck137.net");
-        var res = await client.GetCollectionItems(seriesId, CancellationToken.None).ConfigureAwait(false);
-        Plugin.PrettyPrint("Season GetMetadata: ", res);
-
+        var res = await apiClient.GetCollectionItems(seriesId, CancellationToken.None).ConfigureAwait(false);
         if (!res.Success)
         {
             _log.LogError("API Error: Code: {code} Type: {type} Message: {message}", res.Error?.Code, res.Error?.Type, res.Error?.Message);
@@ -52,14 +40,29 @@ public class WatchbookSeasonProvider : IRemoteMetadataProvider<Season, SeasonInf
         }
 
         var items = res.Data!.Items;
-
-        _log.LogInformation("Slug: {slug}", SlugHelper.Slugify(dirName));
-
         var col = items.Find(i => i.SearchSlug == SlugHelper.Slugify(dirName));
-        Plugin.PrettyPrint("Season Col: ", col);
+
         if (col != null)
         {
-            _log.LogInformation("Found matching season {season} for series {series}", info.Name, seriesId);
+            DateTime? startDate = null;
+            DateTime? endDate = null;
+
+            if (!string.IsNullOrEmpty(col.StartDate))
+            {
+                if (DateTime.TryParseExact(col.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var t))
+                {
+                    startDate = t;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(col.EndDate))
+            {
+                if (DateTime.TryParseExact(col.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var t))
+                {
+                    endDate = t;
+                }
+            }
+
             result.HasMetadata = true;
             result.Item = new Season
             {
@@ -67,6 +70,12 @@ public class WatchbookSeasonProvider : IRemoteMetadataProvider<Season, SeasonInf
                 // TODO(patrik): Temp
                 IndexNumber = col.Order + 1,
                 Overview = col.Description,
+                ProductionYear = startDate?.Year,
+                PremiereDate = startDate,
+                EndDate = endDate,
+                CommunityRating = col.Score,
+                Studios = [.. col.Creators],
+                Tags = [.. col.Tags],
                 ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, col.MediaId } },
             };
         }
@@ -81,10 +90,7 @@ public class WatchbookSeasonProvider : IRemoteMetadataProvider<Season, SeasonInf
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
     {
-        _log.LogError("GetImageResponse: URL: {url}", url);
-
         var httpClient = Plugin.Instance.GetHttpClient();
-
         return await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -3,6 +3,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using MediaBrowser.Model.Entities;
+using ICU4N.Util;
 
 namespace Watchbook.Providers.TV;
 
@@ -19,16 +20,14 @@ public class WatchbookSeriesProvider : IRemoteMetadataProvider<Series, SeriesInf
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {
-        Plugin.PrettyPrint("Series GetMetadata", info);
-
         var apiClient = Plugin.Instance.GetApiClient();
+
+        var result = new MetadataResult<Series>();
 
         var id = info.GetProviderId(ProviderNames.Watchbook);
         if (id != null)
         {
             var res = await apiClient.GetCollectionById(id, CancellationToken.None).ConfigureAwait(false);
-            Plugin.PrettyPrint("GetMetadata: GetCollectionById API Call", res);
-
             if (!res.Success)
             {
                 _log.LogError("API Error: Code: {code} Type: {type} Message: {message}", res.Error?.Code, res.Error?.Type, res.Error?.Message);
@@ -37,41 +36,30 @@ public class WatchbookSeriesProvider : IRemoteMetadataProvider<Series, SeriesInf
 
             var col = res.Data!;
 
-            var result = new MetadataResult<Series>
+            result.HasMetadata = true;
+            result.Item = new Series
             {
-                HasMetadata = true,
-                Item = new Series
-                {
-                    Name = col.Name,
-                    ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, col.Id } },
-                }
+                Name = col.Name,
+                ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, col.Id } },
             };
-
-            return result;
         }
         else
         {
             var res = await apiClient.GetCollections(string.Format("name % \"%{0}%\"", info.Name), CancellationToken.None).ConfigureAwait(false);
-            Plugin.PrettyPrint("Initial API Call", res);
-
-            var result = new MetadataResult<Series>();
             if (res.Success && res.Data?.Collections.Count > 0)
             {
                 var col = res.Data.Collections[0];
 
-                result = new MetadataResult<Series>
+                result.HasMetadata = true;
+                result.Item = new Series
                 {
-                    HasMetadata = true,
-                    Item = new Series
-                    {
-                        Name = col.Name,
-                        ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, col.Id } },
-                    }
+                    Name = col.Name,
+                    ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, col.Id } },
                 };
             }
-
-            return result;
         }
+
+        return result;
     }
 
     public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
@@ -82,7 +70,11 @@ public class WatchbookSeriesProvider : IRemoteMetadataProvider<Series, SeriesInf
         // searchInfo.ProviderIds.TryGetValue(ProviderNames.Watchbook, out var id);
 
         var res = await apiClient.GetCollections(string.Format("name % \"%{0}%\"", searchInfo.Name), CancellationToken.None).ConfigureAwait(false);
-        // TODO(patrik): Check res
+        if (!res.Success)
+        {
+            _log.LogError("API Error: Code: {code} Type: {type} Message: {message}", res.Error?.Code, res.Error?.Type, res.Error?.Message);
+            throw new Exception($"API Error: {res.Error?.Message}");
+        }
 
         var results = new List<RemoteSearchResult>();
 

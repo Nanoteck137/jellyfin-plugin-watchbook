@@ -1,0 +1,37 @@
+PLUGIN_NAME = Watchbook
+BUILD_DIR = bin/Release/net8.0/publish
+
+# Remote server info
+REMOTE_USER = nanoteck137
+REMOTE_HOST = 10.28.28.9
+REMOTE_PLUGIN_DIR = ~/jellyfin/config/plugins/$(PLUGIN_NAME)
+DOCKER_NAME = jellyfin
+
+# ----------------------------
+# Default: build and deploy
+# ----------------------------
+deploy: build copy restart
+
+# Build the plugin
+build:
+	dotnet publish -c Release
+
+# Copy only DLL and dependencies (skip config.json)
+copy:
+	ssh $(REMOTE_USER)@$(REMOTE_HOST) "mkdir -p $(REMOTE_PLUGIN_DIR)"
+	rsync -avz --exclude 'config.json' $(BUILD_DIR)/ $(REMOTE_USER)@$(REMOTE_HOST):$(REMOTE_PLUGIN_DIR)/
+
+# Restart Jellyfin container
+restart:
+	ssh $(REMOTE_USER)@$(REMOTE_HOST) "docker restart $(DOCKER_NAME)"
+
+# Clean local build artifacts
+clean:
+	dotnet clean
+	rm -rf $(BUILD_DIR)
+
+# Tail Jellyfin logs (optional)
+logs:
+	ssh $(REMOTE_USER)@$(REMOTE_HOST) "docker logs -f $(DOCKER_NAME)"
+
+/

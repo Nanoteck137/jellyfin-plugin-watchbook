@@ -1,16 +1,15 @@
 ---
-name: "Template"
-guid: "eb5d7894-8eef-4b36-aa6f-5d124e828ce1"
-version: "1.0.0.0"
-targetAbi: "10.9.0.0"
+name: "Watchbook"
+guid: "496d23d6-7207-4729-86fb-875d3837e4d3"
+version: 1
+targetAbi: "10.10.7.0"
 framework: "net8.0"
-overview: "Short description about your plugin"
+overview: "Plugin for Watchbook integration with Jellyfin."
 description: >
-  This is a longer description that can span more than one
-  line and include details about your plugin.
-category: "General"
+  Plugin for Watchbook integration with Jellyfin.
+category: "Metadata"
 owner: "jellyfin"
 artifacts:
-- "Jellyfin.Plugin.Template.dll"
+  - "Watchbook.dll"
 changelog: >
   changelog

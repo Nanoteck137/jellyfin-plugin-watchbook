@@ -1,24 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Jellyfin.Plugin.Template.Configuration;
+using System.Text.Json;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
+using Watchbook.Configuration;
 
-namespace Jellyfin.Plugin.Template;
+namespace Watchbook;
 
-/// <summary>
-/// The main plugin.
-/// </summary>
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Plugin"/> class.
-    /// </summary>
-    /// <param name="applicationPaths">Instance of the <see cref="IApplicationPaths"/> interface.</param>
-    /// <param name="xmlSerializer">Instance of the <see cref="IXmlSerializer"/> interface.</param>
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, IHttpClientFactory httpClientFactory)
         : base(applicationPaths, xmlSerializer)
     {
@@ -36,18 +30,23 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         return httpClient;
     }
 
-    /// <inheritdoc />
-    public override string Name => "Template";
 
-    /// <inheritdoc />
-    public override Guid Id => Guid.Parse("496d23d6-7207-4729-86fb-875d3837e4d3");
+    static readonly JsonSerializerOptions _opts = new() { WriteIndented = true };
 
-    /// <summary>
-    /// Gets the current plugin instance.
-    /// </summary>
-    public static Plugin? Instance { get; private set; }
+    public static void PrettyPrint(string name, object obj)
+    {
+        Console.Write("PRETTY: {0}", name);
+        Console.WriteLine(JsonSerializer.Serialize(obj, _opts));
+    }
 
-    /// <inheritdoc />
+    public override string Name => "Watchbook";
+
+    public override Guid Id => Guid.Parse("9A4BA60A-3146-4A05-AEB1-7106FE9FFC3A");
+
+#pragma warning disable CS8618
+    public static Plugin Instance { get; private set; }
+#pragma warning restore CS8618
+
     public IEnumerable<PluginPageInfo> GetPages()
     {
         return

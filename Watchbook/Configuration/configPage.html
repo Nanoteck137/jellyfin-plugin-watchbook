@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Watchbook Settings</title>
+</head>
+
+<body>
+    <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+        data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="TemplateConfigForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="ApiBaseUrl">API Base URL</label>
+                        <input id="ApiBaseUrl" name="ApiBaseUrl" type="text" is="emby-input" />
+                        <div class="fieldDescription">The Base URL for the Watchbook API</div>
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var TemplateConfig = {
+                pluginUniqueId: '496d23d6-7207-4729-86fb-875d3837e4d3'
+            };
+
+            document.querySelector('#TemplateConfigPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#ApiBaseUrl').value = config.ApiBaseUrl;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#TemplateConfigForm')
+                .addEventListener('submit', function (e) {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                        config.ApiBaseUrl = document.querySelector('#ApiBaseUrl').value;
+                        ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+
+                    e.preventDefault();
+                    return false;
+                });
+        </script>
+    </div>
+</body>
+
+</html>

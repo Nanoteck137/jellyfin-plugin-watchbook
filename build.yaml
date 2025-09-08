@@ -8,7 +8,7 @@ overview: "Plugin for Watchbook integration with Jellyfin."
 description: >
   Plugin for Watchbook integration with Jellyfin.
 category: "Metadata"
-owner: "jellyfin"
+owner: "nanoteck137"
 artifacts:
   - "Watchbook.dll"
 changelog: >

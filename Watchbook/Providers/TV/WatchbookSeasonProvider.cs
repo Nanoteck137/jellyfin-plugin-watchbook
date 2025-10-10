@@ -39,9 +39,7 @@ public class WatchbookSeasonProvider : IRemoteMetadataProvider<Season, SeasonInf
             throw new Exception($"API Error: {res.Error?.Message}");
         }
 
-        var items = res.Data!.Items;
-        var col = items.Find(i => i.SearchSlug == SlugHelper.Slugify(dirName));
-
+        var col = res.Data!.Items.Find(i => i.SearchSlug == SlugHelper.Slugify(dirName));
         if (col != null)
         {
             DateTime? startDate = null;
@@ -67,8 +65,7 @@ public class WatchbookSeasonProvider : IRemoteMetadataProvider<Season, SeasonInf
             result.Item = new Season
             {
                 Name = col.CollectionName,
-                // TODO(patrik): Temp
-                IndexNumber = col.Order + 1,
+                IndexNumber = col.Position,
                 Overview = col.Description,
                 ProductionYear = startDate?.Year,
                 PremiereDate = startDate,

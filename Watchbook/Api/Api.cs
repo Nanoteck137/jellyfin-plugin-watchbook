@@ -122,6 +122,9 @@ public class MediaPart
 
     [JsonPropertyName("name")]
     public string Name { get; set; }
+
+    [JsonPropertyName("releaseDate")]
+    public string ReleaseDate { get; set; }
 }
 
 public class GetMediaParts
@@ -174,8 +177,8 @@ public class CollectionItem
     [JsonPropertyName("searchSlug")]
     public string SearchSlug { get; set; }
 
-    [JsonPropertyName("order")]
-    public int Order { get; set; }
+    [JsonPropertyName("position")]
+    public int Position { get; set; }
 
     [JsonPropertyName("title")]
     public string Title { get; set; }

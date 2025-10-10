@@ -1,3 +1,4 @@
+using System.Globalization;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
@@ -23,6 +24,7 @@ public class WatchbookEpisodeProvider : IRemoteMetadataProvider<Episode, Episode
         var result = new MetadataResult<Episode>();
 
         info.SeasonProviderIds.TryGetValue(ProviderNames.Watchbook, out string? mediaId);
+
         if (mediaId != null)
         {
             var res = await apiClient.GetMediaParts(mediaId, CancellationToken.None).ConfigureAwait(false);
@@ -32,15 +34,25 @@ public class WatchbookEpisodeProvider : IRemoteMetadataProvider<Episode, Episode
                 throw new Exception($"API Error: {res.Error?.Message}");
             }
 
-            var episode = res.Data!.Parts.Find(p => p.Index == info.IndexNumber - 1);
-
+            var episode = res.Data!.Parts.Find(p => p.Index == info.IndexNumber);
             if (episode != null)
             {
+                DateTime? releaseDate = null;
+
+                if (!string.IsNullOrEmpty(episode.ReleaseDate))
+                {
+                    if (DateTime.TryParseExact(episode.ReleaseDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var t))
+                    {
+                        releaseDate = t;
+                    }
+                }
+
                 result.HasMetadata = true;
                 result.Item = new Episode
                 {
                     Name = episode.Name,
                     IndexNumber = info.IndexNumber,
+                    PremiereDate = releaseDate,
                     ProviderIds = new Dictionary<string, string> { { ProviderNames.Watchbook, episode.MediaId + "/" + episode.Index } },
                 };
             }
